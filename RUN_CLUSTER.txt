@@ -1,0 +1,40 @@
+hpc-parallelgpu01  (Tesla T4 GPU, CUDA + CFITSIO already installed)
+===================================================================
+1. From your PC (Windows cmd / PowerShell, or Linux terminal), copy the zip, then log in:
+      scp Cluster_Assignments.zip 12345678@hpc-parallelgpu01:~
+      ssh 12345678@hpc-parallelgpu01
+   (replace 12345678 with your student ID; Massey credentials; may need the university network/VPN)
+
+2. On the cluster:
+      unzip -o Cluster_Assignments.zip -d cluster
+      nvidia-smi
+      nvcc --version
+
+3. Assignment 4:
+      cd ~/cluster/Assignment4_lensing
+      make
+      ./lens_demo                 # sequential baseline, writes lens.fit
+      ./lens_cuda 3 0.005         # GPU, writes lens_cuda.fit
+      ./run_all.sh | tee a4_results.txt     # all experiments for the report
+      ds9 lens_cuda.fit &         # needs ssh -X; or scp the .fit file to your PC
+
+4. Assignment 5:
+      cd ~/cluster/Assignment5_nsphere
+      make
+      ./nsphere 2 2.05            # expect 13
+      ./nsphere 3 1.5             # expect 19
+      ./nsphere 1 25.5            # expect 51
+      ./run_all.sh | tee a5_results.txt
+
+5. Copy results/images back to your PC (run on your PC):
+      scp "12345678@hpc-parallelgpu01:~/cluster/Assignment4_lensing/*.fit" .
+      scp "12345678@hpc-parallelgpu01:~/cluster/*/a*_results.txt" .
+
+6. For the report (GPU details):
+      wget --no-check-certificate https://moaprime.massey.ac.nz/cuda_devq.tar
+      tar xvf cuda_devq.tar && cd cuda_devq && nvcc -o deviceQuery deviceQuery.cpp && ./deviceQuery
+
+Notes
+ - If make says unknown/unsupported arch, run:  make ARCH=sm_XX  (compute_cap is shown by nvidia-smi above)
+ - If fitsio.h is not found, CFITSIO is not on the default path: ask staff, or build it in $HOME per cfitsio.pdf
+   and run:  make CFITSIO_DIR=$HOME/cfitsio-4.6.2
